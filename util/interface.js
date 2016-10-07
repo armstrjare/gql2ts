@@ -36,17 +36,15 @@ const generateInterfaceName = name => `I${name}`;
 
 const generateTypeName = name => `${name}`;
 
-const generateTypeDeclaration = (description, name, possibleTypes) => `  /*
-    description: ${description}
-  */
-  type ${name} = ${possibleTypes};
-
-`;
+const generateTypeDeclaration = (description, name, possibleTypes) => `  /**
+   * ${description}
+   */
+  type ${name} = ${possibleTypes};\n`
 
 const typeNameDeclaration = '    __typename: string;\n'
 
-const generateInterfaceDeclaration = (description, declaration, fields, additionalInfo, isInput) => `${additionalInfo}  /*
-    description: ${description}
+const generateInterfaceDeclaration = (description, declaration, fields, additionalInfo, isInput) => `${additionalInfo}  /**
+  * ${description}
   */
   interface ${declaration} {
 ${isInput ? '' : typeNameDeclaration}${fields}
@@ -118,7 +116,17 @@ const fieldToDefinition = (field, isInput) => {
     fieldDef = `${field.name}: ${interfaceName}`;
   }
 
-  return `    ${fieldDef};`;
+  // Whitespace
+  fieldDef = `    ${fieldDef};`
+  if (field.description) {
+    fieldDef = `\n` +
+               `    /**\n` +
+               `     * ${field.description}\n` +
+               `     */\n` +
+                    fieldDef;
+  }
+
+  return fieldDef;
 }
 
 const findRootType = type => {
