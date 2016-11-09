@@ -41,7 +41,7 @@ const generateTypeDeclaration = (description, name, possibleTypes) => `  /**
    */
   type ${name} = ${possibleTypes};\n`
 
-const typeNameDeclaration = '    __typename: string;\n'
+const typeNameDeclaration = '    __typename?: string;\n'
 
 const generateInterfaceDeclaration = (description, declaration, fields, additionalInfo, isInput) => `${additionalInfo}  /**
   * ${description}
@@ -67,7 +67,7 @@ const resolveInterfaceName = type => {
   case 'LIST':
     return `Array<${resolveInterfaceName(type.ofType)}>`;
   case 'NON_NULL':
-    return `!${resolveInterfaceName(type.ofType)}`;
+    return `${resolveInterfaceName(type.ofType)}`;
   case 'SCALAR':
     switch (type.name) {
     case 'ID':
@@ -98,22 +98,10 @@ const resolveInterfaceName = type => {
 
 const fieldToDefinition = (field, isInput) => {
   let interfaceName = resolveInterfaceName(field.type);
-  let fieldDef;
-  let isNotNull = interfaceName.includes('!');
-
+  let isNotNull = field.type.kind == 'NON_NULL';
+  let fieldDef = `${field.name}?: ${interfaceName}`;
   if (isNotNull) {
-    /**
-      * should probably refactor this at some point to have
-      * `resolveInterfaceName` return better metadata
-      * global regex replace is ugly
-      */
-    interfaceName = interfaceName.replace(/\!/g, '');
-  }
-
-  if (isInput && !isNotNull) {
-    fieldDef = `${field.name}?: ${interfaceName}`;
-  } else {
-    fieldDef = `${field.name}: ${interfaceName}`;
+    fieldDef += '|null'
   }
 
   // Whitespace
